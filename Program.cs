@@ -45,7 +45,7 @@ public class GameZipper
         string launchCommand = "";
 
         var fpCommandMain = fpConnection.CreateCommand();
-        fpCommandMain.CommandText = $"SELECT title,library,playMode,releaseDate,language,tagsStr,source,platformsStr,status,applicationPath,launchCommand FROM game WHERE id = $id";
+        fpCommandMain.CommandText = $"SELECT title,library,playMode,releaseDate,language,tagsStr,source,platformName,platformsStr,status,applicationPath,launchCommand FROM game WHERE id = $id";
         fpCommandMain.Parameters.AddWithValue("id", args[0]);
         using (var reader = fpCommandMain.ExecuteReader())
         {
@@ -72,18 +72,18 @@ public class GameZipper
                     "Tags: " + reader.GetString(5),
                     "Tag Categories: " + string.Join("; ", reader.GetString(5).Split("; ").Select(_ => "default")),
                     "Source: " + Sanitize(reader.GetString(6)),
-                    "Primary Platform: " + Sanitize(reader.GetString(7).Split("; ")[0]),
-                    "Platforms: " + reader.GetString(7),
-                    "Status: " + reader.GetString(8),
-                    "Application Path: " + Sanitize(reader.GetString(9)),
-                    "Launch Command: " + Sanitize(reader.GetString(10)),
+                    "Primary Platform: " + reader.GetString(7),
+                    "Platforms: " + reader.GetString(8),
+                    "Status: " + reader.GetString(9),
+                    "Application Path: " + Sanitize(reader.GetString(10)),
+                    "Launch Command: " + Sanitize(reader.GetString(11)),
                     "Curation Notes: GameZIP conversion",
                     "UUID: " + args[0],
                     "Group: \"\""
                 });
 
                 title = reader.GetString(0);
-                launchCommand = reader.GetString(10);
+                launchCommand = reader.GetString(11);
 
                 break;
             }
