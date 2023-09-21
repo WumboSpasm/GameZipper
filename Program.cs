@@ -41,8 +41,8 @@ public class GameZipper
         fpConnection.Open();
 
         List<string> meta = new();
+        List<string> urls = new();
         string title = "";
-        string launchCommand = "";
 
         var fpCommandMain = fpConnection.CreateCommand();
         fpCommandMain.CommandText = $"SELECT title,library,playMode,releaseDate,language,tagsStr,source,platformName,platformsStr,status,applicationPath,launchCommand FROM game WHERE id = $id";
@@ -83,7 +83,7 @@ public class GameZipper
                 });
 
                 title = reader.GetString(0);
-                launchCommand = reader.GetString(11);
+                urls.Add(reader.GetString(11));
 
                 break;
             }
@@ -127,6 +127,8 @@ public class GameZipper
                         "    Application Path: " + reader.GetString(1),
                         "    Launch Command: " + reader.GetString(2)
                     });
+
+                    urls.Add(reader.GetString(2));
                 }
             }
         }
@@ -171,7 +173,6 @@ public class GameZipper
             }
         }
 
-        List<string> urls = new() { launchCommand };
         List<string> wildcardUrls = new();
 
         if (args.Length > 1)
