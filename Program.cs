@@ -261,14 +261,22 @@ public class GameZipper
             Console.WriteLine($"downloading {path}...");
 
             string outPath = curationDir + @"content\" + path.Replace('/', '\\');
-            Directory.CreateDirectory(outPath.Substring(0, outPath.LastIndexOf(@"\")));
-
             if (File.Exists(outPath))
             {
                 Console.WriteLine("file already exists and will be skipped");
                 continue;
             }
 
+            try
+            {
+                Directory.CreateDirectory(outPath.Substring(0, outPath.LastIndexOf(@"\")));
+            }
+            catch
+            {
+                Console.WriteLine("file has malformed path and will be skipped");
+                continue;
+            }
+            
             bool success = false;
             foreach (string server in config.FileServers)
             {
