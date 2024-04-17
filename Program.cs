@@ -41,7 +41,7 @@ public class GameZipper
         fpConnection.Open();
 
         List<string> meta = new();
-        List<string> urls = new();
+        List<string> paths = new();
         string title = "";
 
         var fpCommandMain = fpConnection.CreateCommand();
@@ -83,7 +83,7 @@ public class GameZipper
                 });
 
                 title = reader.GetString(0);
-                urls.Add(reader.GetString(11));
+                paths.AddRange(ToPath(reader.GetString(11)));
 
                 break;
             }
@@ -128,7 +128,9 @@ public class GameZipper
                         "    Launch Command: " + reader.GetString(2)
                     });
 
-                    urls.Add(reader.GetString(2));
+                    string launchCommand = reader.GetString(2);
+
+                    paths.AddRange(ToPath(reader.GetString(2)));
                 }
             }
         }
@@ -202,7 +204,7 @@ public class GameZipper
                 }
                 else
                 {
-                    urls.Add(url);
+                    paths.AddRange(ToPath(url));
                 }
             }
         }
@@ -215,9 +217,9 @@ public class GameZipper
             foreach (string url in wildcardUrls)
             {
                 string query = url.Substring(0, url.Length - 1) + "%";
-                if (url.StartsWith("http://"))
+                if (query.StartsWith("http://"))
                 {
-                    query = url.Substring("http://".Length);
+                    query = query.Substring("http://".Length);
                 }
                 query = "Legacy/htdocs/" + query;
 
@@ -228,7 +230,7 @@ public class GameZipper
                 {
                     while (reader.Read())
                     {
-                        urls.Add(reader.GetString(0).Substring("Legacy/htdocs/".Length));
+                        paths.Add(reader.GetString(0).Substring("Legacy/htdocs/".Length));
                     }
                 }
             }
@@ -236,28 +238,19 @@ public class GameZipper
             ultConnection.Close();
         }
 
-        if (urls.Count == 0)
+        if (paths.Count == 0)
         {
             Console.WriteLine("error: no files to download");
             return;
         }
 
-        urls = urls.Distinct().OrderBy(s => s).ToList();
-        urls.RemoveAll(s => s == "");
-        Console.WriteLine($"downloading {urls.Count} files...");
+        paths = paths.Distinct().OrderBy(s => s).ToList();
+        paths.RemoveAll(s => s == "");
 
-        foreach (string url in urls)
+        Console.WriteLine($"downloading {paths.Count} files...");
+
+        foreach (string path in paths)
         {
-            string path = url;
-            if (path.StartsWith("http://"))
-            {
-                path = path.Substring("http://".Length);
-            }
-            if (path.Contains("?"))
-            {
-                path = path.Substring(0, path.IndexOf("?"));
-            }
-
             Console.WriteLine($"downloading {path}...");
 
             string outPath = curationDir + @"content\" + path.Replace('/', '\\');
@@ -303,6 +296,34 @@ public class GameZipper
 
         Console.WriteLine("zipping...");
         Process.Start("cmd.exe", $"/c cd \"out\\{safeTitle}\" & ..\\..\\7za a -r -ms=on \"..\\{safeTitle}.7z\" & cd ..\\..").WaitForExit();
+    }
+
+    public static List<string> ToPath(string url)
+    {
+        if (url.StartsWith("http://"))
+        {
+            url = url.Substring("http://".Length);
+        }
+        if (url.Contains("?"))
+        {
+            url = url.Substring(0, url.IndexOf("?"));
+        }
+        if (url.Split("/").Length == 1)
+        {
+            url += "/";
+        }
+
+        List<string> paths = new();
+        if (url.EndsWith("/"))
+        {
+            paths.AddRange(new string[] { url + "index.html", url + "index.htm", url + "index.php", url + "index.phtml" });
+        }
+        else
+        {
+            paths.Add(url);
+        }
+
+        return paths;
     }
 
     public static string Sanitize(string value)
